@@ -5,7 +5,7 @@ coverage
 .env
 
 #Hardhat files
-
+hardhat.config.ts
 typechain-types/
 artifacts
 cache
