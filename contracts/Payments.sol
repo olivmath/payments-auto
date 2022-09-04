@@ -10,23 +10,18 @@ contract Payments is Ownable {
     using SignatureChecker for address;
 
     struct Employe {
-        address employe_address,
-        uint256 salary_amount,
-        uint256 date_of_init,
+        address employe_address;
+        uint256 salary_amount;
+        uint256 date_of_init;
     }
 
-    Employe[] public employes;
+    Employe[] public list_of_employes;
 
-    int32 x;
-
-
-    function addEmployer(address employe_address, uint256 salary_amount) { 
-        employes_information = Employe(employe_address, salary_amount, block.number)
-
+    function addEmploye(address employe_address, uint256 salary_amount) public {
+        list_of_employes.push(
+            Employe(employe_address, salary_amount, block.number)
+        );
     }
-
-    list_structs.push(addEmployer)
-
 
     function validateSignature(
         address addr,
