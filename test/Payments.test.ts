@@ -37,9 +37,57 @@ describe("Payments", () => {
             Payments = await PaymentFactory.deploy()
         })
     })
-    describe("Add Employe", async () => {
-        it("Owner add Manager with U$ 10000", async () => {
-            await Payments.connect(owner).addEmploye(manager.address, 10000)
+    describe("Add Employee", async () => {
+        it("Owner add Employee (Manager) with U$ 10000", async () => {
+            await Payments.connect(owner).addEmployee(manager.address, 10000)
+
+            expect(
+                await Payments.connect(manager).nextPayment(manager.address)
+            ).to.equal(172802)
+
+            expect(
+                await Payments.connect(manager).salary(manager.address)
+            ).to.equal(10000)
+        })
+        it("Owner add Employee (Senior) with U$ 8000", async () => {
+            await Payments.connect(owner).addEmployee(senior.address, 8000)
+
+            expect(
+                await Payments.connect(senior).nextPayment(senior.address)
+            ).to.equal(172803)
+
+            expect(
+                await Payments.connect(senior).salary(senior.address)
+            ).to.equal(8000)
+        })
+        it("Owner add Employee (Mid) with U$ 6000", async () => {
+            await Payments.connect(owner).addEmployee(mid.address, 6000)
+
+            expect(
+                await Payments.connect(mid).nextPayment(mid.address)
+            ).to.equal(172804)
+
+            expect(await Payments.connect(mid).salary(mid.address)).to.equal(
+                6000
+            )
+        })
+        it("Owner add Employee (Junior) with U$ 3000", async () => {
+            await Payments.connect(owner).addEmployee(junior.address, 3000)
+
+            expect(
+                await Payments.connect(junior).nextPayment(junior.address)
+            ).to.equal(172805)
+
+            expect(
+                await Payments.connect(junior).salary(junior.address)
+            ).to.equal(3000)
+        })
+    })
+    describe("Deposit ethers", async () => {
+        it("add 17000 ETH for pay employee", async () => {
+            await Payments.connect(owner).deposit({ value: 17000 })
+
+            expect(await Payments.connect(manager).balance()).to.equal(17000)
         })
     })
 })

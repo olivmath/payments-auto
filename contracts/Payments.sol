@@ -9,29 +9,56 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Payments is Ownable {
     using SignatureChecker for address;
 
-    struct Employe {
-        address employe_address;
-        uint256 salary_amount;
-        uint256 date_of_init;
+    struct Employee {
+        uint256 salaryAmount;
+        uint256 dateOfInit;
+        uint256 nextPayment;
+    }
+    mapping(address => Employee) mappingOfEmployees;
+
+    function addEmployee(address employeeAdress, uint256 salaryAmount)
+        public
+        onlyOwner
+    {
+        mappingOfEmployees[employeeAdress] = Employee(
+            salaryAmount,
+            block.number,
+            nextPayment(block.number)
+        );
     }
 
-    Employe[] public list_of_employes;
+    function salary(address employeeAdress) public view returns (uint256) {
+        return mappingOfEmployees[employeeAdress].salaryAmount;
+    }
 
-    function addEmploye(address employe_address, uint256 salary_amount) public {
-        list_of_employes.push(
-            Employe(employe_address, salary_amount, block.number)
-        );
+    function nextPayment(address employeeSalary) public view returns (uint256) {
+        return mappingOfEmployees[employeeSalary].nextPayment;
+    }
+
+    function nextPayment(uint256 dateOfInit) private pure returns (uint256) {
+        uint256 blockTimeInSeconds = 15;
+        uint256 hourInSeconds = 3600;
+        uint256 dayInHours = 24;
+        uint256 mounthInDays = 30;
+        uint256 monthInSecond = mounthInDays * dayInHours * hourInSeconds;
+        return dateOfInit + (monthInSecond / blockTimeInSeconds);
     }
 
     function validateSignature(
         address addr,
         bytes32 message,
         bytes memory signature
-    ) private {
+    ) private view {
         string memory erro = string.concat(
             "Invalid signature for ",
             Strings.toHexString(addr)
         );
         require(true == addr.isValidSignatureNow(message, signature), erro);
+    }
+
+    function deposit() public payable onlyOwner {}
+
+    function balance() public view returns (uint256) {
+        return address(this).balance;
     }
 }
