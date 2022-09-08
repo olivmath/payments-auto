@@ -15,24 +15,36 @@ contract Payments is Ownable {
         uint256 nextPayment;
     }
     mapping(address => Employee) mappingOfEmployees;
+    address[] listOfEmployees;
+
+    event NewEmployee(address employee, uint256 salary, uint256 nextPayment);
 
     function addEmployee(address employeeAdress, uint256 salaryAmount)
         public
         onlyOwner
     {
+        uint256 _currentBlock = block.number;
+        uint256 _nextPayment = nextPayment(block.number);
+        listOfEmployees.push(employeeAdress);
         mappingOfEmployees[employeeAdress] = Employee(
             salaryAmount,
-            block.number,
-            nextPayment(block.number)
+            _currentBlock,
+            _nextPayment
         );
+
+        emit NewEmployee(employeeAdress, salaryAmount, _nextPayment);
     }
 
     function salary(address employeeAdress) public view returns (uint256) {
         return mappingOfEmployees[employeeAdress].salaryAmount;
     }
 
-    function nextPayment(address employeeSalary) public view returns (uint256) {
-        return mappingOfEmployees[employeeSalary].nextPayment;
+    function nextPayment(address employeeAddress)
+        public
+        view
+        returns (uint256)
+    {
+        return mappingOfEmployees[employeeAddress].nextPayment;
     }
 
     function nextPayment(uint256 dateOfInit) private pure returns (uint256) {
@@ -60,5 +72,9 @@ contract Payments is Ownable {
 
     function balance() public view returns (uint256) {
         return address(this).balance;
+    }
+
+    function employees() public view onlyOwner returns (address[] memory) {
+        return listOfEmployees;
     }
 }
