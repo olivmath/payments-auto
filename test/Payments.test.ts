@@ -93,5 +93,16 @@ describe("Payments", () => {
             expect(await Payments.connect(manager).balance()).to.equal(24000)
         })
     })
+    describe("Payment", async () => {
+        it("pay in block #172802", async () => {
+            await hardhat.network.provider.send("hardhat_mine", [
+                ethers.utils.hexValue(
+                    await Payments.nextPayment(manager.address)
+                )
+            ])
+        })
+        it("pay in block #172803", async () => {})
+        it("pay in block #172804", async () => {})
+        it("pay in block #172805", async () => {})
     })
 })
