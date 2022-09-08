@@ -4,6 +4,7 @@
     "scripts": {
         "deploy-local": "npx hardhat run scripts/deploy.ts --network localhost",
         "deploy-rinkeby": "npx hardhat run scripts/deploy.ts --network rinkeby",
+        "w": "yarn nodemon --watch test/ --exec 'yarn t'",
         "t-l": "npx hardhat test --network localhost",
         "d": "npx hardhat run scripts/deploy.ts",
         "accounts": "npx hardhat accounts",
@@ -38,6 +39,7 @@
         "typescript": "^4.7.4"
     },
     "dependencies": {
-        "@openzeppelin/contracts": "^4.7.3"
+        "@openzeppelin/contracts": "^4.7.3",
+        "nodemon": "^2.0.19"
     }
 }
