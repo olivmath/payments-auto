@@ -1,14 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Payments is Ownable {
-    using SignatureChecker for address;
-
     struct Employee {
         uint256 salaryAmount;
         uint256 dateOfInit;
@@ -56,25 +51,34 @@ contract Payments is Ownable {
         return dateOfInit + (monthInSecond / blockTimeInSeconds);
     }
 
-    function validateSignature(
-        address addr,
-        bytes32 message,
-        bytes memory signature
-    ) private view {
-        string memory erro = string.concat(
-            "Invalid signature for ",
-            Strings.toHexString(addr)
-        );
-        require(true == addr.isValidSignatureNow(message, signature), erro);
-    }
-
     function deposit() public payable onlyOwner {}
 
     function balance() public view returns (uint256) {
         return address(this).balance;
     }
 
+    function cust() public view returns (uint256) {
+        uint256 totalCust = 0;
+        for (uint256 i = 0; i < listOfEmployees.length; i++) {
+            totalCust += mappingOfEmployees[listOfEmployees[i]].salaryAmount;
+        }
+        return totalCust;
+    }
+
     function employees() public view onlyOwner returns (address[] memory) {
         return listOfEmployees;
+    }
+
+    function pay() public payable onlyOwner {
+        // verify date of payment of employee
+        // verify balance of contract
+        // send payments
+        // re-calc next payment for payment
+        // for (uint256 i = 0; i < listOfEmployees.length; i++) {
+        //     address employee = listOfEmployees[i];
+        //     uint256 amount = mappingOfEmployees[employee].salaryAmount;
+        //     (bool sent, bytes memory data) = employee.call{value: amount}("");
+        //     require(sent, "Failed to send Ether");
+        // }
     }
 }
