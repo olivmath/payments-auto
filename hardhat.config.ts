@@ -2,12 +2,11 @@ import { HardhatUserConfig } from "hardhat/types"
 import "@nomicfoundation/hardhat-toolbox"
 
 const config: HardhatUserConfig = {
-    solidity: "0.8.15",
+    solidity: "0.8.17",
     networks: {
         hardhat: {
             mining: {
-                auto: true,
-                interval: 1
+                auto: true
             }
         }
     }
