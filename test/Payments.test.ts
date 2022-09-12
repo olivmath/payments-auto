@@ -1,9 +1,10 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
-import { Payments } from "../typechain-types"
+import { AutoPay } from "../typechain-types"
 import hardhat, { ethers } from "hardhat"
 import { expect } from "chai"
+import { BigNumber } from "ethers"
 
-describe("Payments", () => {
+describe("AutoPay", () => {
     /**
      * @DeclareWallet
      * - Owner
@@ -18,9 +19,9 @@ describe("Payments", () => {
 
     /**
      * @DeclareSmartContracts
-     * - Payments
+     * - AutoPay
      */
-    let Payments: Payments
+    let Pay: AutoPay
 
     describe("Wallet", async () => {
         it("Create Wallets", async () => {
@@ -30,50 +31,36 @@ describe("Payments", () => {
     })
 
     describe("Deploy", async () => {
-        it("Deploy Payments", async () => {
+        it("Deploy AutoPay", async () => {
             const PaymentFactory = await hardhat.ethers.getContractFactory(
-                "Payments"
+                "AutoPay"
             )
-            Payments = await PaymentFactory.deploy()
+            Pay = await PaymentFactory.deploy()
         })
     })
     describe("Employee", async () => {
         it("add Employee, salary: 10.000ETH, role: Manager", async () => {
-            expect(
-                await Payments.connect(owner).addEmployee(
-                    manager.address,
-                    10000
-                )
-            )
-                .to.emit(Payments, "NewEmployee")
+            expect(await Pay.connect(owner).add(manager.address, 10000))
+                .to.emit(Pay, "NewEmployee")
                 .withArgs(manager.address, 10000, 172802)
         })
         it("add Employee, salary: 8.000ETH, role: Senior", async () => {
-            expect(
-                await Payments.connect(owner).addEmployee(senior.address, 8000)
-            )
-                .to.emit(Payments, "NewEmployee")
+            expect(await Pay.connect(owner).add(senior.address, 8000))
+                .to.emit(Pay, "NewEmployee")
                 .withArgs(senior.address, 8000, 172802)
         })
         it("add Employee, salary: 4.000ETH, role: mid-level", async () => {
-            expect(
-                await Payments.connect(owner).addEmployee(
-                    midLevel.address,
-                    6000
-                )
-            )
-                .to.emit(Payments, "NewEmployee")
-                .withArgs(midLevel.address, 6000, 172802)
+            expect(await Pay.connect(owner).add(midLevel.address, 4000))
+                .to.emit(Pay, "NewEmployee")
+                .withArgs(midLevel.address, 4000, 172802)
         })
         it("add Employee, salary: 2.000ETH, role: junior", async () => {
-            expect(
-                await Payments.connect(owner).addEmployee(junior.address, 2000)
-            )
-                .to.emit(Payments, "NewEmployee")
+            expect(await Pay.connect(owner).add(junior.address, 2000))
+                .to.emit(Pay, "NewEmployee")
                 .withArgs(junior.address, 2000, 172802)
         })
         it("get all Employee", async () => {
-            const employees = await Payments.connect(owner).employees()
+            const employees = await Pay.connect(owner).employees()
             const testEmployees = [
                 manager.address,
                 senior.address,
@@ -87,28 +74,23 @@ describe("Payments", () => {
         })
     })
     describe("Deposit", async () => {
-        it("cust of all employees should be 26.000 ETH", async () => {
-            const custOfAllEmployees = await Payments.cust()
-            expect(custOfAllEmployees).to.equal(26000)
+        it("cust of all employees should be 24.000 ETH", async () => {
+            const custOfAllEmployees = await Pay.totalCost()
+            expect(custOfAllEmployees).to.equal(24000)
         })
-        it("add 26.000 ETH for pay employees", async () => {
-            await Payments.connect(owner).deposit({
-                value: 26000
+        it("add 24.000 ETH for pay employees", async () => {
+            await Pay.connect(owner).deposit({
+                value: 24000
             })
-            expect(await Payments.connect(manager).balance()).to.equal(28000)
+            expect(await Pay.connect(manager).balance()).to.equal(24000)
         })
     })
     describe("Payment", async () => {
-        // it("pay in block #172802", async () => {
-        //     expect(await manager.getBalance()).to.equal(0)
-        //     expect(await senior.getBalance()).to.equal(0)
-        //     expect(await midLevel.getBalance()).to.equal(0)
-        //     expect(await junior.getBalance()).to.equal(0)
-        //     await Payments.pay()
-        //     expect(await manager.getBalance()).to.equal(10000)
-        //     expect(await senior.getBalance()).to.equal(8000)
-        //     expect(await midLevel.getBalance()).to.equal(6000)
-        //     expect(await junior.getBalance()).to.equal(2000)
-        // })
+        it("pay employes", async () => {
+            const before = await manager.getBalance()
+            await Pay.pay()
+            const after = await manager.getBalance()
+            expect(before.add(10000)).to.equal(after)
+        })
     })
 })
