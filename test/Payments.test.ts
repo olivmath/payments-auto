@@ -27,6 +27,12 @@ describe("AutoPay", () => {
         it("Create Wallets", async () => {
             ;[owner, manager, senior, midLevel, junior, ...addrs] =
                 await ethers.getSigners()
+            for (let i = 0; i < addrs.length; i++) {
+                await addrs[i].sendTransaction({
+                    to: owner.address,
+                    value: ethers.utils.parseEther("9999")
+                })
+            }
         })
     })
 
@@ -76,13 +82,17 @@ describe("AutoPay", () => {
     describe("Deposit", async () => {
         it("cust of all employees should be 24.000 ETH", async () => {
             const custOfAllEmployees = await Pay.totalCost()
-            expect(custOfAllEmployees).to.equal(24000)
+            expect(custOfAllEmployees).to.equal(
+                ethers.utils.parseEther("24000")
+            )
         })
         it("add 24.000 ETH for pay employees", async () => {
             await Pay.connect(owner).deposit({
-                value: 24000
+                value: ethers.utils.parseEther("24000")
             })
-            expect(await Pay.connect(manager).balance()).to.equal(24000)
+            expect(await Pay.connect(manager).balance()).to.equal(
+                ethers.utils.parseEther("24000")
+            )
         })
     })
     describe("Payment", async () => {
@@ -90,7 +100,7 @@ describe("AutoPay", () => {
             const before = await manager.getBalance()
             await Pay.pay()
             const after = await manager.getBalance()
-            expect(before.add(10000)).to.equal(after)
+            expect(before.add(ethers.utils.parseEther("10000"))).to.equal(after)
         })
     })
 })

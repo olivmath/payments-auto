@@ -1,16 +1,18 @@
-import { ethers } from "hardhat"
+import { ethernal, ethers } from "hardhat"
 
 async function main() {
-    const [deployer] = await ethers.getSigners()
+    const [owner] = await ethers.getSigners()
 
-    console.log("Deploying contracts with the account:", deployer.address)
+    const AutoPay = await ethers.getContractFactory("AutoPay")
+    const Pay = await AutoPay.deploy()
 
-    console.log("Account balance:", (await deployer.getBalance()).toString())
+    // await ethernal.push({
+    //     name: "Pay",
+    //     address: Pay.address
+    // })
 
-    const Payments = await ethers.getContractFactory("Payments")
-    const DeployedPayments = await Payments.deploy()
-
-    console.log("Payments address:", DeployedPayments.address)
+    console.log("Contract address:", Pay.address)
+    console.log("Owner address:", owner.address)
 }
 
 main()

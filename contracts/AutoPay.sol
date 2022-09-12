@@ -19,10 +19,11 @@ contract AutoPay is Ownable {
         public
         onlyOwner
     {
+        // verify if already exists
         uint256 _nextPayment = nextPayment();
         listOfEmployees.push(employeeAdress);
         mappingOfEmployees[employeeAdress] = Employee(
-            salaryAmount,
+            salaryAmount * 10e17,
             _nextPayment
         );
 

@@ -2,6 +2,8 @@
     "name": "hardhat-project",
     "license": "MIT",
     "scripts": {
+        "d-l": "npx hardhat run scripts/deploy.ts --network localhost",
+        "r-l": "npx hardhat run scripts/run.ts --network localhost",
         "d-g": "npx hardhat run scripts/deploy.ts --network goerli",
         "w": "yarn nodemon --config nodemon.json --exec 'yarn t'",
         "t-l": "npx hardhat test --network localhost",
@@ -39,6 +41,7 @@
     },
     "dependencies": {
         "@openzeppelin/contracts": "^4.7.3",
+        "hardhat-ethernal": "^1.1.1",
         "nodemon": "^2.0.19"
     }
 }
