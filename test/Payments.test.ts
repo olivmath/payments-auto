@@ -1,8 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
-import { AutoPay } from "../typechain-types"
+import { AutoPay, Array } from "../typechain-types"
 import hardhat, { ethers } from "hardhat"
 import { expect } from "chai"
-import { BigNumber } from "ethers"
 
 describe("AutoPay", () => {
     /**
@@ -19,9 +18,23 @@ describe("AutoPay", () => {
 
     /**
      * @DeclareSmartContracts
+     * - Array
      * - AutoPay
      */
+    let Array: Array
     let Pay: AutoPay
+
+    /**
+     * @Timestamp functions
+     * - monthInSeconds
+     * - now
+     */
+    const monthInSeconds = (): number => {
+        return 2592000
+    }
+    const now = (): number => {
+        return Math.floor(Date.now() / 1000)
+    }
 
     describe("Wallet", async () => {
         it("Create Wallets", async () => {
@@ -38,32 +51,60 @@ describe("AutoPay", () => {
 
     describe("Deploy", async () => {
         it("Deploy AutoPay", async () => {
+            const Lib = await hardhat.ethers.getContractFactory("Array")
+            Array = await Lib.deploy()
             const PaymentFactory = await hardhat.ethers.getContractFactory(
-                "AutoPay"
+                "AutoPay",
+                {
+                    libraries: {
+                        Array: Array.address
+                    }
+                }
             )
             Pay = await PaymentFactory.deploy()
         })
     })
+
     describe("Employee", async () => {
         it("add Employee, salary: 10.000ETH, role: Manager", async () => {
-            expect(await Pay.connect(owner).add(manager.address, 10000))
-                .to.emit(Pay, "NewEmployee")
-                .withArgs(manager.address, 10000, 172802)
+            await expect(Pay.connect(owner).add(manager.address, 10000))
+            expect(await Pay.salary(manager.address)).to.equal(
+                ethers.utils.parseEther("10000")
+            )
+            expect(
+                (await Pay.nextPayment(manager.address)).toNumber()
+            ).to.greaterThan(now() + monthInSeconds())
         })
         it("add Employee, salary: 8.000ETH, role: Senior", async () => {
             expect(await Pay.connect(owner).add(senior.address, 8000))
-                .to.emit(Pay, "NewEmployee")
-                .withArgs(senior.address, 8000, 172802)
+            expect(await Pay.salary(senior.address)).to.equal(
+                ethers.utils.parseEther("8000")
+            )
+            expect(await Pay.nextPayment(senior.address)).to.greaterThanOrEqual(
+                now() + monthInSeconds()
+            )
         })
         it("add Employee, salary: 4.000ETH, role: mid-level", async () => {
             expect(await Pay.connect(owner).add(midLevel.address, 4000))
-                .to.emit(Pay, "NewEmployee")
-                .withArgs(midLevel.address, 4000, 172802)
+            expect(await Pay.salary(midLevel.address)).to.equal(
+                ethers.utils.parseEther("4000")
+            )
+            expect(
+                await Pay.nextPayment(midLevel.address)
+            ).to.greaterThanOrEqual(now() + monthInSeconds())
         })
         it("add Employee, salary: 2.000ETH, role: junior", async () => {
             expect(await Pay.connect(owner).add(junior.address, 2000))
-                .to.emit(Pay, "NewEmployee")
-                .withArgs(junior.address, 2000, 172802)
+            expect(await Pay.salary(junior.address)).to.equal(
+                ethers.utils.parseEther("2000")
+            )
+            expect(await Pay.nextPayment(junior.address)).to.greaterThanOrEqual(
+                now() + monthInSeconds()
+            )
+        })
+        it("should be throw error when add exists employee", async () => {
+            await expect(Pay.connect(owner).add(junior.address, 2000)).to.be
+                .reverted
         })
         it("get all Employee", async () => {
             const employees = await Pay.connect(owner).employees()
@@ -77,6 +118,16 @@ describe("AutoPay", () => {
             expect(employees).to.be.a("array")
             expect(employees).to.be.length(4)
             expect(employees).to.have.members(testEmployees)
+        })
+        it("edit salary of Manager employee to 12000ETH", async () => {
+            expect(await Pay.connect(owner).edit(manager.address, 12000))
+            expect(await Pay.salary(manager.address)).to.equal(
+                ethers.utils.parseEther("12000")
+            )
+        })
+        it("remove employee: Junior", async () => {
+            expect(await Pay.connect(owner).remove(junior.address))
+            expect(await Pay.salary(junior.address)).to.equal(0)
         })
     })
     describe("Deposit", async () => {
@@ -100,7 +151,7 @@ describe("AutoPay", () => {
             const before = await manager.getBalance()
             await Pay.pay()
             const after = await manager.getBalance()
-            expect(before.add(ethers.utils.parseEther("10000"))).to.equal(after)
+            expect(before.add(ethers.utils.parseEther("12000"))).to.equal(after)
         })
     })
 })

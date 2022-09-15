@@ -3,16 +3,22 @@ import { ethernal, ethers } from "hardhat"
 async function main() {
     const [owner] = await ethers.getSigners()
 
-    const AutoPay = await ethers.getContractFactory("AutoPay")
+    const Lib = await ethers.getContractFactory("Array")
+    const Array = await Lib.deploy()
+
+    const AutoPay = await ethers.getContractFactory("AutoPay", {
+        libraries: { Array: Array.address }
+    })
     const Pay = await AutoPay.deploy()
 
-    // await ethernal.push({
-    //     name: "Pay",
-    //     address: Pay.address
-    // })
-
+    console.log("Library address:", Array.address)
     console.log("Contract address:", Pay.address)
     console.log("Owner address:", owner.address)
+
+    await ethernal.push({
+        name: "AutoPay",
+        address: Pay.address
+    })
 }
 
 main()

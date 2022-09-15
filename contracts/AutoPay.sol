@@ -3,35 +3,68 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+library Array {
+    function check(address[] memory arr, address item)
+        public
+        pure
+        returns (bool)
+    {
+        for (uint256 i = 0; i < arr.length; i++) {
+            if (arr[i] == item) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
 contract AutoPay is Ownable {
+    using Array for address[];
+
     struct Employee {
         uint256 salaryAmount;
         uint256 nextPayment;
     }
     mapping(address => Employee) mappingOfEmployees;
-    address[] listOfEmployees;
+    address[] private _employees;
 
     event NewEmployee(address employee, uint256 salary, uint256 nextPayment);
+    event NewSalary(address employee, uint256 newSalary);
+    event EmployeeRemoved(address employee);
 
     function deposit() public payable onlyOwner {}
 
-    function add(address employeeAdress, uint256 salaryAmount)
+    function remove(address employeeAddress) public onlyOwner {
+        require(_employees.check(employeeAddress), "Employee not exists");
+        delete (mappingOfEmployees[employeeAddress]);
+
+        emit EmployeeRemoved(employeeAddress);
+    }
+
+    function edit(address employeeAddress, uint256 newSalary) public onlyOwner {
+        require(_employees.check(employeeAddress), "Employee not exists");
+        mappingOfEmployees[employeeAddress].salaryAmount = newSalary * 10e17;
+
+        emit NewSalary(employeeAddress, newSalary);
+    }
+
+    function add(address employeeAddress, uint256 salaryAmount)
         public
         onlyOwner
     {
-        // verify if already exists
+        require(!_employees.check(employeeAddress), "Employee already added");
         uint256 _nextPayment = nextPayment();
-        listOfEmployees.push(employeeAdress);
-        mappingOfEmployees[employeeAdress] = Employee(
+        _employees.push(employeeAddress);
+        mappingOfEmployees[employeeAddress] = Employee(
             salaryAmount * 10e17,
             _nextPayment
         );
 
-        emit NewEmployee(employeeAdress, salaryAmount, _nextPayment);
+        emit NewEmployee(employeeAddress, salaryAmount, _nextPayment);
     }
 
-    function salary(address employeeAdress) public view returns (uint256) {
-        return mappingOfEmployees[employeeAdress].salaryAmount;
+    function salary(address employeeAddress) public view returns (uint256) {
+        return mappingOfEmployees[employeeAddress].salaryAmount;
     }
 
     function nextPayment(address employeeAddress)
@@ -55,14 +88,14 @@ contract AutoPay is Ownable {
 
     function totalCost() public view returns (uint256) {
         uint256 totalCust = 0;
-        for (uint256 i = 0; i < listOfEmployees.length; i++) {
-            totalCust += mappingOfEmployees[listOfEmployees[i]].salaryAmount;
+        for (uint256 i = 0; i < _employees.length; i++) {
+            totalCust += mappingOfEmployees[_employees[i]].salaryAmount;
         }
         return totalCust;
     }
 
     function employees() public view onlyOwner returns (address[] memory) {
-        return listOfEmployees;
+        return _employees;
     }
 
     function pay() public payable onlyOwner {
@@ -70,10 +103,10 @@ contract AutoPay is Ownable {
         // verify balance of contract
         // send payments
         // re-calc next payment for payment
-        for (uint256 i = 0; i < listOfEmployees.length; i++) {
-            address employee = listOfEmployees[i];
+        for (uint256 i = 0; i < _employees.length; i++) {
+            address employee = _employees[i];
             uint256 amount = mappingOfEmployees[employee].salaryAmount;
-            (bool sent, bytes memory data) = employee.call{value: amount}("");
+            (bool sent, bytes memory _data) = employee.call{value: amount}("");
             require(sent, "Failed to send Ether");
         }
     }
