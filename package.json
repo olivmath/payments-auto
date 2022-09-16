@@ -2,10 +2,10 @@
     "name": "hardhat-project",
     "license": "MIT",
     "scripts": {
+        "w": "yarn nodemon --config nodemon.json --exec 'yarn t --bail'",
         "d-l": "npx hardhat run scripts/deploy.ts --network localhost",
-        "r-l": "npx hardhat run scripts/run.ts --network localhost",
         "d-g": "npx hardhat run scripts/deploy.ts --network goerli",
-        "w": "yarn nodemon --config nodemon.json --exec 'yarn t'",
+        "r-l": "npx hardhat run scripts/run.ts --network localhost",
         "t-l": "npx hardhat test --network localhost",
         "d": "npx hardhat run scripts/deploy.ts",
         "accounts": "npx hardhat accounts",

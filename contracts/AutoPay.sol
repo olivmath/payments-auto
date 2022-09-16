@@ -31,6 +31,7 @@ contract AutoPay is Ownable {
     event NewEmployee(address employee, uint256 salary, uint256 nextPayment);
     event NewSalary(address employee, uint256 newSalary);
     event EmployeeRemoved(address employee);
+    event Payed(address employee, uint256 salary);
 
     function deposit() public payable onlyOwner {}
 
@@ -75,11 +76,17 @@ contract AutoPay is Ownable {
         return mappingOfEmployees[employeeAddress].nextPayment;
     }
 
-    function nextPayment() private view returns (uint256) {
+    function monthInBlocks() private pure returns (uint256) {
         uint256 monthInDays = 30;
         uint256 dayInHours = 24;
         uint256 hourInSeconds = 3600;
-        return block.timestamp + (monthInDays * dayInHours * hourInSeconds);
+        uint256 blockInSeconds = 15;
+
+        return (monthInDays * dayInHours * hourInSeconds) / blockInSeconds;
+    }
+
+    function nextPayment() private view returns (uint256) {
+        return block.number + monthInBlocks();
     }
 
     function balance() public view returns (uint256) {
@@ -98,16 +105,30 @@ contract AutoPay is Ownable {
         return _employees;
     }
 
+    function verifyPayment(address employee) private view returns (bool) {
+        return
+            block.number >= mappingOfEmployees[employee].nextPayment &&
+            mappingOfEmployees[employee].salaryAmount > 0;
+    }
+
     function pay() public payable onlyOwner {
-        // verify date of payment of employee
-        // verify balance of contract
-        // send payments
-        // re-calc next payment for payment
         for (uint256 i = 0; i < _employees.length; i++) {
-            address employee = _employees[i];
-            uint256 amount = mappingOfEmployees[employee].salaryAmount;
-            (bool sent, bytes memory _data) = employee.call{value: amount}("");
-            require(sent, "Failed to send Ether");
+            address payable employee = payable(_employees[i]);
+            if (verifyPayment(employee) == true) {
+                uint256 amount = mappingOfEmployees[employee].salaryAmount;
+                require(
+                    balance() > amount,
+                    "Contract not have balance for pay employee"
+                );
+                (bool sent, bytes memory _data) = employee.call{value: amount}(
+                    ""
+                );
+                require(sent, "Failed to send eth to employee");
+
+                mappingOfEmployees[employee].nextPayment += monthInBlocks();
+
+                emit Payed(employee, amount);
+            } else {}
         }
     }
 }
