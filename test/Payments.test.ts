@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 import { AutoPay, Array } from "../typechain-types"
 import hardhat, { ethers } from "hardhat"
-import chai, { expect } from "chai"
+import { expect } from "chai"
 
 describe("AutoPay", () => {
     /**
@@ -91,6 +91,20 @@ describe("AutoPay", () => {
             )
             expect(await Pay.nextPayment(junior.address)).to.equal(172821)
         })
+        it("edit salary of Manager employee to 12.000ETH", async () => {
+            await expect(Pay.connect(owner).edit(manager.address, 12000))
+                .to.emit(Pay, "NewSalary")
+                .withArgs(manager.address, 12000)
+            expect(await Pay.salary(manager.address)).to.equal(
+                ethers.utils.parseEther("12000")
+            )
+        })
+        it("remove employee: Junior", async () => {
+            await expect(Pay.connect(owner).remove(junior.address))
+                .to.emit(Pay, "EmployeeRemoved")
+                .withArgs(junior.address)
+            expect(await Pay.salary(junior.address)).to.equal(0)
+        })
         it("should be throw error when add exists employee", async () => {
             await expect(Pay.connect(owner).add(junior.address, 2000)).to.be
                 .reverted
@@ -108,20 +122,6 @@ describe("AutoPay", () => {
             expect(employees).to.be.length(4)
             expect(employees).to.have.members(testEmployees)
         })
-        it("edit salary of Manager employee to 12000ETH", async () => {
-            await expect(Pay.connect(owner).edit(manager.address, 12000))
-                .to.emit(Pay, "NewSalary")
-                .withArgs(manager.address, 12000)
-            expect(await Pay.salary(manager.address)).to.equal(
-                ethers.utils.parseEther("12000")
-            )
-        })
-        it("remove employee: Junior", async () => {
-            await expect(Pay.connect(owner).remove(junior.address))
-                .to.emit(Pay, "EmployeeRemoved")
-                .withArgs(junior.address)
-            expect(await Pay.salary(junior.address)).to.equal(0)
-        })
     })
     describe("Deposit", async () => {
         it("cust of all employees should be 24.000 ETH", async () => {
@@ -130,7 +130,7 @@ describe("AutoPay", () => {
                 ethers.utils.parseEther("24000")
             )
         })
-        it("add 24.000 ETH for pay employees", async () => {
+        it("add 24.001 ETH for pay employees", async () => {
             await Pay.connect(owner).deposit({
                 value: ethers.utils.parseEther("24001")
             })
@@ -142,9 +142,7 @@ describe("AutoPay", () => {
     describe("Payment", async () => {
         it("pay employes", async () => {
             const before = await manager.getBalance()
-            await Pay.pay()
-            const after = await manager.getBalance()
-            expect(before).to.equal(after)
+            await expect(Pay.pay()).to.emit(Pay, "Payed")
         })
     })
 })
