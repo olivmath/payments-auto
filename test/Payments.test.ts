@@ -123,6 +123,7 @@ describe("AutoPay", () => {
             expect(employees).to.have.members(testEmployees)
         })
     })
+
     describe("Deposit", async () => {
         it("cust of all employees should be 24.000 ETH", async () => {
             const custOfAllEmployees = await Pay.totalCost()
@@ -139,10 +140,23 @@ describe("AutoPay", () => {
             )
         })
     })
+
     describe("Payment", async () => {
         it("pay employes", async () => {
-            const before = await manager.getBalance()
-            await expect(Pay.pay()).to.emit(Pay, "Payed")
+            await hardhat.network.provider.send("hardhat_mine", [
+                ethers.utils.hexValue(200000)
+            ])
+            const managerBalance = await manager.getBalance()
+            const seniorBalance = await senior.getBalance()
+            const midLevelBalance = await midLevel.getBalance()
+            const juniorBalance = await junior.getBalance()
+
+            await Pay.pay()
+
+            expect(managerBalance).to.lessThan(await manager.getBalance())
+            expect(seniorBalance).to.lessThan(await senior.getBalance())
+            expect(midLevelBalance).to.lessThan(await midLevel.getBalance())
+            expect(juniorBalance).to.equal(await junior.getBalance())
         })
     })
 })
